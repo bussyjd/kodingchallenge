@@ -1,6 +1,8 @@
 package main
 
 import (
+	"./hourlylog"
+	"./rabbit"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/mgo.v2"
@@ -48,13 +50,9 @@ func SetEvent(event MetricData) {
 		Key:         []string{"t"},
 		ExpireAfter: 1 * time.Hour,
 	}
-	err = c.DropIndex("t")
+	err = c.DropIndex("t_1")
 	err = c.EnsureIndex(index)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func AverageOfValues() {
-	//pipe := c.Pipe([]bson.M{{"$match": bson.M{"name": "Otavio"}}})
 }
