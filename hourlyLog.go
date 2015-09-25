@@ -54,3 +54,7 @@ func SetEvent(event MetricData) {
 		log.Fatal(err)
 	}
 }
+
+func AverageOfValues() {
+	//pipe := c.Pipe([]bson.M{{"$match": bson.M{"name": "Otavio"}}})
+}
