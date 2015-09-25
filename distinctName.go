@@ -19,23 +19,11 @@ type MetricData struct {
 }
 
 func main() {
-	/*
-		    SAVES into Redis
-		    Input is a JSON that outputs to JSON and outputs to a file
-				   NEED:
-				   A parsing function
-				   A Data structure
-
-			       1 write the specs
-			       2 write the spec tests
-			       3 write the functions
-	*/
-	fmt.Println(DayOfUnixMonth())
-
 	go Listen()
 	NewClient()
 	BucketCheck()
 }
+
 func BucketCheck() {
 	for range time.Tick(time.Minute) {
 		fmt.Println("tick")
@@ -57,7 +45,6 @@ func MessageRead(body []byte) {
 	json.Unmarshal(body, &res)
 	fmt.Println(res)
 	SetEvent(res.Metric)
-
 }
 
 func NewClient() {
