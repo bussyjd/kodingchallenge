@@ -7,14 +7,6 @@ import (
 	"testing"
 )
 
-//const (
-//	HOST        = "192.168.99.100"
-//	PORT        = "32770"
-//	DB_USER     = "postgres"
-//	DB_PASSWORD = "postgres"
-//	DB_NAME     = "test"
-//)
-
 var db *sql.DB
 
 func init() {
@@ -49,9 +41,3 @@ func CountRows(username string) int {
 	err = row.Scan(&count)
 	return count
 }
-
-//func checkErr(err error) {
-//	if err != nil {
-//		panic(err)
-//	}
-//}

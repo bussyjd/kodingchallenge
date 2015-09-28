@@ -1,14 +1,20 @@
 # kodingchallenge
-
-This is the anwer to the challenge: https://gist.github.com/cihangir/c95509f16701a34bd575
+This is the answer to a golang challenge
 
 ## Requirements
-RabbitMQ and Redis must be running
+RabbitMQ, Redis, mongodb and postgres must be running:
+
+docker run -d -P --name my_rabbitmq rabbitmq
+docker run -d -P --name my_redis redis
+docker run -d -P --name my_mongo mongo
+docker run -d -P --name my_postgres postgres
 
 ## Tests
 go test app_test.go app.go
 
-## Bonus
-To calculate the average of incoming values I would use MapReduce functions into MongoDB to:
+## Build
+go build kodingchallenge/worker/{accountname,distinctname,hourlylog}
+
+
 *Count the occurences of different metrics.
 *Return the average occurences of each incoming values
