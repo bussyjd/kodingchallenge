@@ -1,11 +1,21 @@
-package hourlylog
+package main
 
 import (
-	"encoding/json"
-	"gopkg.in/mgo.v2"
 	"log"
 	"time"
+
+	"encoding/json"
+	"gopkg.in/mgo.v2"
+	"kodingchallenge/rabbit"
 )
+
+func main() {
+	session := NewMongoClient("", "")
+	defer session.Close()
+	rabbit.Listen(func(body []byte) {
+		MessageRead(body)
+	})
+}
 
 type MetricData struct {
 	Username string
@@ -23,7 +33,7 @@ func NewMongoClient(db string, collection string) *mgo.Session {
 	if collection == "" {
 		collection = "entries"
 	}
-	session, err := mgo.Dial("192.168.99.100:32769")
+	session, err := mgo.Dial("192.168.99.100:32770")
 	if err != nil {
 		panic(err)
 	}

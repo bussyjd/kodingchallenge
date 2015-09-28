@@ -1,9 +1,10 @@
-package distinctname
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/redis.v3"
+	"kodingchallenge/rabbit"
 	"strconv"
 	"time"
 )
@@ -16,6 +17,14 @@ type MetricData struct {
 	Username string
 	Count    int64
 	Metric   string
+}
+
+func main() {
+	go rabbit.Listen(func(body []byte) {
+		MessageRead(body)
+	})
+	NewClient()
+	BucketCheck()
 }
 
 func BucketCheck() {

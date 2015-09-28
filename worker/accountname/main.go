@@ -1,10 +1,11 @@
-package accountname
+package main
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
+	"kodingchallenge/rabbit"
 	"time"
 )
 
@@ -21,6 +22,14 @@ const (
 	DB_PASSWORD = "postgres"
 	DB_NAME     = "test"
 )
+
+func main() {
+	db := NewPsql()
+	InitPsql(db)
+	rabbit.Listen(func(body []byte) {
+		MessageRead(body, db)
+	})
+}
 
 func NewPsql() *sql.DB {
 	dbinfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
