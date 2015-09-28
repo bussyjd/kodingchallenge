@@ -14,7 +14,7 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func Listen(MessageRead func([]byte)) {
+func Listen(host string, port int, MessageRead func([]byte)) {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()

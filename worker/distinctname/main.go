@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"gopkg.in/redis.v3"
-	"kodingchallenge/rabbit"
 	"strconv"
 	"time"
+
+	"gopkg.in/redis.v3"
+	"kodingchallenge/rabbit"
 )
 
 const key = "metric"
@@ -19,17 +21,38 @@ type MetricData struct {
 	Metric   string
 }
 
+var DEBUG = flag.Bool("debug_mode", false, "DEBUG MODE: ")
+var HOST = flag.String("redis_host", "127.0.0.1", "Redis (default 127.0.0.1): ")
+var PORT = flag.Int("redis_port", 6379, "Redis port (default 6379): ")
+var amqp_host = flag.String("amqp_host", "127.0.0.1", "RabbitMQ host (default 127.0.0.1): ")
+var amqp_port = flag.Int("amqp_port", 5672, "RAbbitMQ port (default 5672): ")
+
 func main() {
-	go rabbit.Listen(func(body []byte) {
+	flag.Parse()
+	go rabbit.Listen(*amqp_host, *amqp_port, func(body []byte) {
 		MessageRead(body)
 	})
 	NewClient()
 	BucketCheck()
 }
 
+func NewClient() {
+	client = redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%v", *HOST, *PORT),
+		Password: "",
+		DB:       0,
+	})
+	pong, err := client.Ping().Result()
+	if *DEBUG == true {
+		fmt.Println(pong, err)
+	}
+}
+
 func BucketCheck() {
 	for range time.Tick(time.Minute) {
-		fmt.Println("tick")
+		if *DEBUG == true {
+			fmt.Println("tick")
+		}
 		if DayOfUnixMonth == nil {
 			exists, err := client.Exists(strconv.FormatInt(UnixTimeHour(), 10)).Result()
 			if exists != true {
@@ -50,21 +73,13 @@ func MessageRead(body []byte) {
 	SetEvent(res.Metric)
 }
 
-func NewClient() {
-	client = redis.NewClient(&redis.Options{
-		Addr:     "192.168.99.100:32768",
-		Password: "",
-		DB:       0,
-	})
-
-	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
-}
-
 func SetEvent(name string) float64 {
 	fmt.Println(DayOfUnixMonth())
 	result, err := client.ZIncr(strconv.FormatInt(DayOfUnixMonth(), 10), redis.Z{float64(1), name}).Result()
-	fmt.Println(result, err)
+
+	if *DEBUG == true {
+		fmt.Println(result, err)
+	}
 	return result
 }
 
@@ -73,7 +88,9 @@ func SetMonthlyBucket() int64 {
 	for i, _ := range a {
 		a[i] = strconv.Itoa(i + 1)
 	}
-	fmt.Printf("%v\n", a)
+	if *DEBUG == true {
+		fmt.Printf("%v\n", a)
+	}
 	merged, err := client.ZUnionStore(
 		strconv.FormatInt(time.Now().Unix(), 10),
 		redis.ZStore{Aggregate: "SUM"},

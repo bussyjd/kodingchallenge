@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"time"
+
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	_ "github.com/lib/pq"
 	"kodingchallenge/rabbit"
-	"time"
 )
 
 type MetricData struct {
@@ -16,25 +18,33 @@ type MetricData struct {
 }
 
 const (
-	HOST        = "192.168.99.100"
-	PORT        = "32770"
 	DB_USER     = "postgres"
 	DB_PASSWORD = "postgres"
-	DB_NAME     = "test"
+	DB_NAME     = "postgres"
 )
 
+var DEBUG = flag.Bool("debug_mode", false, "DEBUG MODE: ")
+var HOST = flag.String("postgres_host", "127.0.0.1", "Postgres host (default 127.0.0.1): ")
+var PORT = flag.Int("postgres_port", 5432, "Postgres port (default 5432): ")
+var amqp_host = flag.String("amqp_host", "127.0.0.1", "RabbitMQ host (default 127.0.0.1): ")
+var amqp_port = flag.Int("amqp_port", 5672, "RAbbitMQ port (default 5672): ")
+
 func main() {
+	flag.Parse()
 	db := NewPsql()
 	InitPsql(db)
-	rabbit.Listen(func(body []byte) {
+	rabbit.Listen(*amqp_host, *amqp_port, func(body []byte) {
 		MessageRead(body, db)
 	})
 }
 
 func NewPsql() *sql.DB {
-	dbinfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		HOST, PORT, DB_USER, DB_PASSWORD, DB_NAME)
+	dbinfo := fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s sslmode=disable",
+		*HOST, *PORT, DB_USER, DB_PASSWORD, DB_NAME)
 	db, err := sql.Open("postgres", dbinfo)
+	if *DEBUG == true {
+		fmt.Printf("postgresql connction info: %s \n", dbinfo)
+	}
 	checkErr(err)
 	return db
 }

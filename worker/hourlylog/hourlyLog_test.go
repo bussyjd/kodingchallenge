@@ -1,13 +1,15 @@
 package main
 
 import (
-	//"fmt"
-	_ "gopkg.in/mgo.v2"
+	"flag"
 	"testing"
 	"time"
+
+	_ "gopkg.in/mgo.v2"
 )
 
 func init() {
+	flag.Parse()
 	NewMongoClient("metric_test", "entries_test")
 	DropEventCollection()
 }

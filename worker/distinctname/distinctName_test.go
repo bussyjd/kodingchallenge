@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"gopkg.in/redis.v3"
 	"strconv"
 	"testing"
+
+	"gopkg.in/redis.v3"
 )
 
 var eventTests = []struct {
@@ -18,8 +20,9 @@ var eventTests = []struct {
 }
 
 func init() {
+	flag.Parse()
 	client = redis.NewClient(&redis.Options{
-		Addr:     "192.168.99.100:32768",
+		Addr:     fmt.Sprintf("%s:%v", *HOST, *PORT),
 		Password: "",
 		DB:       0,
 	})

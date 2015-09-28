@@ -1,15 +1,18 @@
 package main
 
 import (
-	"database/sql"
+	"flag"
 	"fmt"
-	_ "github.com/lib/pq"
 	"testing"
+
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 
 func init() {
+	flag.Parse()
 	db = NewPsql()
 	InitPsql(db)
 }
