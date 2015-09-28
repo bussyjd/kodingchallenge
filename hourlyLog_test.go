@@ -5,32 +5,34 @@ import (
 	//"fmt"
 	//	"gopkg.in/mgo.v2"
 	"testing"
-	//"time"
+	"time"
 )
 
+var pastentry struct{}
+
 func init() {
-	hourlylog.NewMongoClient()
-	//c = session.DB("metric").C("entries")
+	hourlylog.NewMongoClient("metric_test", "entries_test")
 }
 
 func TestMongoLogRecord(t *testing.T) {
 	hourlylog.MessageRead([]byte(`{"username": "kodingbot_test", "count": 12412414, "metric": "kite_call"}`))
 	n := hourlylog.CountEvent()
 	if n != 1 {
-		t.Errorf("Expected 1 entry in the collection go %d", n)
+		t.Errorf("Expected 1 entry in the collection got %d", n)
 	}
+	hourlylog.DropEventCollection()
 }
 
 func TestMongoLogRecordExpire(t *testing.T) {
-	//hourlylog.c.DropCollection()
-	//err := c.Insert(&MetricData{"kodingbot_test", 12412415, "kite_call", time.Now().Add(-7200 * time.Second)})
-	//if err != nil {
-	//	panic(err)
-	//}
-	//MessageRead([]byte(`{"username": "kodingbot_test", "count": 12412414, "metric": "kite_call"}`))
+	hourlylog.SetEvent(pastentry{
+		Username: "kodingbot_test",
+		Count:    12412415,
+		Metric:   "kite_call",
+		T:        time.Now().Add(-7200 * time.Second)})
+	hourlylog.MessageRead([]byte(`{"username": "kodingbot_test", "count": 12412414, "metric": "kite_call"}`))
 
-	//n, err := c.Count()
-	//if n != 1 {
-	//	t.Errorf("Expected 1 entry in the collection go %d", n)
-	//}
+	n := hourlylog.CountEvent()
+	if n != 1 {
+		t.Errorf("Expected 1 entry in the collection go %d", n)
+	}
 }

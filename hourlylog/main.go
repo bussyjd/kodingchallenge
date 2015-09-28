@@ -16,7 +16,13 @@ type MetricData struct {
 
 var c *mgo.Collection
 
-func NewMongoClient() *mgo.Session {
+func NewMongoClient(db string, collection string) *mgo.Session {
+	if db == "" {
+		db = "metric"
+	}
+	if collection == "" {
+		collection = "entries"
+	}
 	session, err := mgo.Dial("192.168.99.100:32769")
 	if err != nil {
 		panic(err)
@@ -53,4 +59,11 @@ func CountEvent() int {
 		panic(err)
 	}
 	return n
+}
+
+func DropEventCollection() {
+	err := c.DropCollection()
+	if err != nil {
+		panic(err)
+	}
 }
