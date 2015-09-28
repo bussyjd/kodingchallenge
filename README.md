@@ -11,8 +11,8 @@ RabbitMQ, Redis, mongodb and postgres must be running:
 
 ## Setup Environment
     cd worker/accountname/ && go get
-    cd worker/distinctname/ && go get
-    cd worker/hourlylog/ && go get
+    cd ../distinctname/ && go get
+    cd ../hourlylog/ && go get && cd ../../
 
 ## Tests
 
