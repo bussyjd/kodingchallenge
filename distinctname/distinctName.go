@@ -1,4 +1,4 @@
-package main
+package distinctname
 
 import (
 	"encoding/json"
@@ -16,12 +16,6 @@ type MetricData struct {
 	Username string
 	Count    int64
 	Metric   string
-}
-
-func main() {
-	go Listen()
-	NewClient()
-	BucketCheck()
 }
 
 func BucketCheck() {

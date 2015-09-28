@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./accountName"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
