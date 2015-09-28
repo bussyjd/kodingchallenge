@@ -2,6 +2,8 @@
 This is the answer to a golang challenge
 
 ## Requirements
+Tested with golang 1.5 and docker
+
 RabbitMQ, Redis, mongodb and postgres must be running:
 
     docker run -d -P --name my_rabbitmq rabbitmq
