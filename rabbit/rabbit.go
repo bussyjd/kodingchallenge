@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"expvar"
 	"github.com/streadway/amqp"
 )
 
@@ -14,8 +15,8 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func Listen(host string, port int, MessageRead func([]byte)) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+func Listen(host string, port int, counts *expvar.Map, MessageRead func([]byte)) {
+	conn, err := amqp.Dial(fmt.Sprintf("amqp://guest:guest@%s:%v/", host, port))
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -67,6 +68,7 @@ func Listen(host string, port int, MessageRead func([]byte)) {
 
 	go func() {
 		for d := range msgs {
+			counts.Add("Rabbitmq get", 1)
 			MessageRead(d.Body)
 			//fmt.Println("%s", d.Body)
 		}

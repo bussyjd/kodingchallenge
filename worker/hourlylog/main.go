@@ -4,11 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
 	"time"
 
 	"encoding/json"
+	"expvar"
 	"gopkg.in/mgo.v2"
 	"kodingchallenge/rabbit"
+)
+
+var (
+	counts = expvar.NewMap("counters")
 )
 
 var DEBUG = flag.Bool("debug_mode", false, "DEBUG MODE: ")
@@ -18,10 +25,22 @@ var amqp_host = flag.String("amqp_host", "127.0.0.1", "RabbitMQ host (default 12
 var amqp_port = flag.Int("amqp_port", 5672, "RAbbitMQ port (default 5672): ")
 
 func main() {
+	// Flag parameters parsing
 	flag.Parse()
+	// Metrics server
+	sock, err := net.Listen("tcp", "localhost:8123")
+	checkErr(err)
+	go func() {
+		if *DEBUG == true {
+			fmt.Println("Metrics server now available at localhost:8123/debug/vars")
+		}
+		http.Serve(sock, nil)
+	}()
+	// Mongodb
 	session := NewMongoClient("", "")
 	defer session.Close()
-	rabbit.Listen(*amqp_host, *amqp_port, func(body []byte) {
+	// Rabbitmq listener
+	rabbit.Listen(*amqp_host, *amqp_port, counts, func(body []byte) {
 		MessageRead(body)
 	})
 }
@@ -85,6 +104,12 @@ func CountEvent() int {
 
 func DropEventCollection() {
 	err := c.DropCollection()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}

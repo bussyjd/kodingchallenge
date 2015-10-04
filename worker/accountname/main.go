@@ -3,12 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
+	"net/http"
 	"time"
 
 	"database/sql"
 	"encoding/json"
+	"expvar"
 	_ "github.com/lib/pq"
 	"kodingchallenge/rabbit"
+)
+
+var (
+	counts = expvar.NewMap("counters")
 )
 
 type MetricData struct {
@@ -30,10 +37,22 @@ var amqp_host = flag.String("amqp_host", "127.0.0.1", "RabbitMQ host (default 12
 var amqp_port = flag.Int("amqp_port", 5672, "RAbbitMQ port (default 5672): ")
 
 func main() {
+	// Flag parameters parsing
 	flag.Parse()
+	// Metrics server
+	sock, err := net.Listen("tcp", "localhost:8123")
+	checkErr(err)
+	go func() {
+		if *DEBUG == true {
+			fmt.Println("Metrics server now available at localhost:8123/debug/vars")
+		}
+		http.Serve(sock, nil)
+	}()
+	// Postgresql
 	db := NewPsql()
 	InitPsql(db)
-	rabbit.Listen(*amqp_host, *amqp_port, func(body []byte) {
+	// Rabbitmq listener
+	rabbit.Listen(*amqp_host, *amqp_port, counts, func(body []byte) {
 		MessageRead(body, db)
 	})
 }
@@ -43,7 +62,7 @@ func NewPsql() *sql.DB {
 		*HOST, *PORT, DB_USER, DB_PASSWORD, DB_NAME)
 	db, err := sql.Open("postgres", dbinfo)
 	if *DEBUG == true {
-		fmt.Printf("postgresql connction info: %s \n", dbinfo)
+		fmt.Printf("postgresql connection info: %s \n", dbinfo)
 	}
 	checkErr(err)
 	return db
@@ -58,13 +77,13 @@ func WritePsql(username string, db *sql.DB) {
 	statement, err := db.Prepare("INSERT INTO entry(username,created) VALUES($1,$2)")
 	checkErr(err)
 	_, err = statement.Exec(username, time.Now())
+	checkErr(err)
+	counts.Add("sql write", 1)
 }
 
 func MessageRead(body []byte, db *sql.DB) {
 	res := MetricData{}
 	json.Unmarshal(body, &res)
-	fmt.Println(res)
-	fmt.Println(res.Username)
 	WritePsql(res.Username, db)
 }
 

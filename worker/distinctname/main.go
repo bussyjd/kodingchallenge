@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
+	"net/http"
 	"strconv"
 	"time"
 
+	"expvar"
 	"gopkg.in/redis.v3"
 	"kodingchallenge/rabbit"
+)
+
+var (
+	counts = expvar.NewMap("counters")
 )
 
 const key = "metric"
@@ -28,10 +35,22 @@ var amqp_host = flag.String("amqp_host", "127.0.0.1", "RabbitMQ host (default 12
 var amqp_port = flag.Int("amqp_port", 5672, "RAbbitMQ port (default 5672): ")
 
 func main() {
+	// Flag parameters parsing
 	flag.Parse()
-	go rabbit.Listen(*amqp_host, *amqp_port, func(body []byte) {
+	// Metrics server
+	sock, err := net.Listen("tcp", "localhost:8123")
+	checkErr(err)
+	go func() {
+		if *DEBUG == true {
+			fmt.Println("Metrics server now available at localhost:8123/debug/vars")
+		}
+		http.Serve(sock, nil)
+	}()
+	// Rabbitmq listener
+	go rabbit.Listen(*amqp_host, *amqp_port, counts, func(body []byte) {
 		MessageRead(body)
 	})
+	// Redis
 	NewClient()
 	BucketCheck()
 }
@@ -66,10 +85,8 @@ func BucketCheck() {
 }
 
 func MessageRead(body []byte) {
-	//fmt.Printf(" [x] %s", body)
 	res := MetricData{}
 	json.Unmarshal(body, &res)
-	fmt.Println(res)
 	SetEvent(res.Metric)
 }
 
@@ -111,4 +128,10 @@ func DayOfUnixMonth() int64 {
 func UnixTimeHour() int64 {
 	unixtime := time.Now().Unix()
 	return (((unixtime / 60) / 60) / 24)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
