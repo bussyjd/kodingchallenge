@@ -27,8 +27,6 @@ eg: `
 `go build kodingchallenge/worker/{accountname,distinctname,hourlylog}`
 
 ## Run
-
 ip addresses and ports may differ (check with docker ps)
 ### acountname 
 `go run worker/accountname/main.go -postgres_host 192.168.99.100 -postgres_port 32771 -amqp_host 192.168.99.100 -amqp_port 5672 -debug_mode true`
-

@@ -70,7 +70,6 @@ func Listen(host string, port int, counts *expvar.Map, MessageRead func([]byte))
 		for d := range msgs {
 			counts.Add("Rabbitmq get", 1)
 			MessageRead(d.Body)
-			//fmt.Println("%s", d.Body)
 		}
 	}()
 
